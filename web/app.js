@@ -2183,3 +2183,28 @@ document.addEventListener("keydown", (e) => {
     ["#modal", "#book-modal", "#share-modal"].forEach((s) => $(s)?.classList.add("hidden"));
   }
 });
+
+// ---------------- 主题配色 ----------------
+const THEMES = ["night", "green", "pink", "orange", "purple"];
+function applyTheme(name) {
+  if (!THEMES.includes(name)) name = "night";
+  if (name === "night") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", name);
+  try { localStorage.setItem("mh-theme", name); } catch { /* ignore */ }
+  $$("#theme-pop .swatch").forEach((b) =>
+    b.classList.toggle("on", b.dataset.theme === name));
+}
+(function initTheme() {
+  let saved = "night";
+  try { saved = localStorage.getItem("mh-theme") || "night"; } catch { /* ignore */ }
+  applyTheme(saved);
+})();
+$("#theme-btn").addEventListener("click", (e) => {
+  e.stopPropagation();
+  $("#theme-pop").classList.toggle("hidden");
+});
+$$("#theme-pop .swatch").forEach((b) =>
+  b.addEventListener("click", () => { applyTheme(b.dataset.theme); }));
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".theme-wrap")) $("#theme-pop").classList.add("hidden");
+});
