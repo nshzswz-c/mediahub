@@ -2324,7 +2324,7 @@ document.addEventListener("keydown", (e) => {
 });
 
 // ---------------- 主题配色 ----------------
-const THEMES = ["night", "green", "pink", "orange", "purple"];
+const THEMES = ["night", "light", "green", "pink", "orange", "purple"];
 function applyTheme(name) {
   if (!THEMES.includes(name)) name = "night";
   if (name === "night") document.documentElement.removeAttribute("data-theme");

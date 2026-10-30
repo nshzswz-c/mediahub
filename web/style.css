@@ -1695,6 +1695,67 @@ html[data-theme="purple"] {
   --glow: 0 0 0 1px rgba(167, 139, 250, .38), 0 10px 32px rgba(168, 85, 247, .16);
 }
 
+/* 亮色「晨雾白」：浅底深字 + 同一套品牌渐变 */
+html[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f2f4f9;
+  --panel: #ffffff;
+  --panel2: #eef1f8;
+  --border: #dbe2ee;
+  --line: rgba(31, 45, 80, .10);
+  --text: #1e2637;
+  --muted: #64708c;
+  --faint: #98a2b8;
+  --accent: #4f6ef7;
+  --accent2: #0ea5e9;
+  --grad: linear-gradient(135deg, #4f6ef7 0%, #0ea5e9 100%);
+  --grad-soft: linear-gradient(135deg, rgba(79,110,247,.12), rgba(14,165,233,.08));
+  --glow: 0 0 0 1px rgba(79, 110, 247, .28), 0 10px 32px rgba(79, 110, 247, .14);
+  --green: #0e9f6e;
+  --star: #d97706;
+  --shadow-1: 0 1px 2px rgba(16, 24, 40, .08);
+  --shadow-2: 0 12px 32px rgba(16, 24, 40, .16);
+  --h0: #e7ecf5; --h1: #bfe0f2; --h2: #8cc4e6; --h3: #47a2d9; --h4: #1279b8;
+}
+html[data-theme="light"] ::-webkit-scrollbar-thumb { background: #c3cddd; }
+html[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: #a9b5c9; }
+html[data-theme="light"] .hrow-scroll::-webkit-scrollbar-thumb { background: #c3cddd; }
+html[data-theme="light"] .btn:hover { border-color: #b9c5da; background: #e9edf6; }
+html[data-theme="light"] .sub-tab:hover,
+html[data-theme="light"] .report-years button:hover:not(:disabled):not(.on) { border-color: #b9c5da; }
+html[data-theme="light"] .m-info p,
+html[data-theme="light"] .rp-comments .c-text { color: #3c465c; }
+html[data-theme="light"] .card:hover .title { color: var(--accent); }
+html[data-theme="light"] .quick-tags span.on { color: var(--accent); }
+html[data-theme="light"] .set-side { background: rgba(15, 30, 60, .025); }
+html[data-theme="light"] .stat-hero {
+  background: linear-gradient(120deg, #edf2fe 0%, #e9f2fd 55%, #e6f0fb 100%);
+}
+html[data-theme="light"] .hero-lbl { color: #6b7690; }
+html[data-theme="light"] .rk { background: #e9edf6; }
+html[data-theme="light"] .sp-bar,
+html[data-theme="light"] .goal-panel .goal-bar { background: #e3e9f3; }
+html[data-theme="light"] .list-card .list-posters { background: #e7ecf5; }
+html[data-theme="light"] .login-screen {
+  background:
+    radial-gradient(1100px 560px at 50% -10%, #dfe9fc 0%, var(--bg) 58%);
+}
+html[data-theme="light"] .sk-card .sk-box,
+html[data-theme="light"] .sk-card .sk-line {
+  background: linear-gradient(100deg,
+    var(--panel2) 40%, #dde3ee 50%, var(--panel2) 60%);
+}
+html[data-theme="light"] .rp-hero {
+  background: radial-gradient(120% 160% at 20% 0%, #dfe7fb 0%, #e8f0fc 45%, #eef4fd 100%);
+}
+html[data-theme="light"] .rp-hero::before { background: #aebcff; }
+html[data-theme="light"] .rp-hero::after { background: #7fd4f8; }
+html[data-theme="light"] .rp-year,
+html[data-theme="light"] .rp-total small { color: #6d7ea8; }
+html[data-theme="light"] .rp-slogan { color: #7d8db4; }
+html[data-theme="light"] .report-years button.rp-nav:hover:not(:disabled) { color: var(--accent); }
+html[data-theme="light"] #back-top:hover { color: var(--accent); }
+
 /* 主题选色板（顶栏 🎨 弹出） */
 .theme-wrap { position: relative; }
 .theme-pop {
