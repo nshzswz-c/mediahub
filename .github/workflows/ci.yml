@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  python:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r server/requirements.txt
+
+      - name: Syntax check
+        run: |
+          python -m py_compile server/main.py server/books_local.py
+
+      - name: Import check
+        working-directory: server
+        run: python -c "import main; print('app routes:', len(main.app.routes))"
+
+  docker:
+    name: Docker build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t mediahub:ci .
+
+      - name: Smoke test
+        run: |
+          docker run -d --name mediahub -p 8899:8899 mediahub:ci
+          for i in $(seq 1 20); do
+            if curl -sf -m 3 -o /dev/null http://127.0.0.1:8899/; then
+              echo "service up"; exit 0
+            fi
+            sleep 1
+          done
+          echo "service did not start"; docker logs mediahub; exit 1
