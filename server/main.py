@@ -1672,6 +1672,45 @@ async def home_rows(resume_limit: int = 12, latest_limit: int = 12):
     return {"ok": True, "resume": resume, "latest": latest}
 
 
+@app.get("/api/home/panel")
+def home_panel(limit: int = 300):
+    """主页统计面板：核心数字 + 可排序/筛选的看完清单（轻量，不查 media_meta）"""
+    conn = db()
+    rows = [row_to_dict(r) for r in conn.execute(
+        """SELECT title, media_type, year, poster, rating, rewatch, runtime,
+                  finished_at, updated_at
+           FROM records WHERE status='done'""").fetchall()]
+    want_count = conn.execute(
+        "SELECT COUNT(*) FROM records WHERE status='want'").fetchone()[0]
+    conn.close()
+    now = int(time.time())
+    month_start = int(datetime.now().replace(day=1, hour=0, minute=0,
+                                              second=0, microsecond=0).timestamp())
+    year_start = int(datetime(datetime.now().year, 1, 1).timestamp())
+    items, total_min = [], 0
+    for r in rows:
+        ts = r.get("finished_at") or r.get("updated_at") or 0
+        items.append({
+            "title": r["title"], "media_type": r["media_type"],
+            "year": r.get("year") or "", "poster": r.get("poster") or "",
+            "rating": r.get("rating"), "rewatch": int(r.get("rewatch") or 0),
+            "ts": ts, "runtime": r.get("runtime") or 0,
+        })
+        rt = r.get("runtime") or (110 if r["media_type"] == "电影" else
+             45 if r["media_type"] in ("电视剧", "短剧", "纪录片") else 60)
+        total_min += rt or 0
+    items.sort(key=lambda x: -x["ts"])
+    return {
+        "ok": True,
+        "done_count": len(items),
+        "month_count": sum(1 for x in items if x["ts"] >= month_start),
+        "year_count": sum(1 for x in items if x["ts"] >= year_start),
+        "want_count": want_count,
+        "total_hours": round(total_min / 60, 1),
+        "items": items[:max(50, min(limit, 1000))],
+    }
+
+
 SYNC_LOCK = asyncio.Lock()
 
 

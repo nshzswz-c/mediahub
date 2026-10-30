@@ -84,6 +84,35 @@
       <div class="hrow-scroll" id="latest-track"></div>
     </section>
 
+    <section class="hrow hidden" id="row-recent">
+      <div class="hrow-head">
+        <h2 class="hrow-title">🕒 最近看完</h2>
+        <span class="hrow-sub" id="row-recent-sub"></span>
+      </div>
+      <div class="hrow-scroll" id="recent-track"></div>
+    </section>
+
+    <section class="hpanel hidden" id="home-panel">
+      <div class="hpanel-head">
+        <h2 class="hrow-title">📊 我的观影面板</h2>
+        <span class="hrow-sub" id="hpanel-sub"></span>
+      </div>
+      <div class="hpanel-cards" id="hpanel-cards"></div>
+      <div class="hpanel-ctrl">
+        <div class="hp-pills" id="hp-range">
+          <button class="hp-pill on" data-range="all" type="button">全部</button>
+          <button class="hp-pill" data-range="year" type="button">今年</button>
+          <button class="hp-pill" data-range="month" type="button">本月</button>
+        </div>
+        <div class="hp-pills" id="hp-sort">
+          <button class="hp-pill on" data-sort="time" type="button">🕒 最近看完</button>
+          <button class="hp-pill" data-sort="rating" type="button">★ 评分最高</button>
+          <button class="hp-pill" data-sort="rewatch" type="button">🔁 重看最多</button>
+        </div>
+      </div>
+      <div class="hp-list" id="hp-list"></div>
+    </section>
+
     <h2 id="browse-title" class="section-title">热门电影</h2>
     <div id="media-grid" class="grid"></div>
     <div id="browse-empty" class="empty hidden">没有数据。请先在 ⚙️ 设置里填好 MoviePilot 地址和账号，或换个关键词搜索。</div>

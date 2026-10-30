@@ -1452,12 +1452,126 @@ function latestCardHTML(r, i) {
   </div>`;
 }
 
+function recentCardHTML(r, i) {
+  const poster = r.poster
+    ? `<img src="${esc(r.poster)}" loading="lazy" onerror="this.style.display='none'">`
+    : `<div class="no-poster">🎞</div>`;
+  const when = r.days_ago === 0 ? "今天" : r.days_ago ? `${r.days_ago} 天前` : "";
+  return `
+  <div class="hc hc-latest" data-idx="${i}">
+    <div class="hc-poster">${poster}
+      ${r.rating ? `<span class="hc-badge hc-rate">★ ${r.rating}</span>`
+                 : when ? `<span class="hc-badge">${when}</span>` : ""}
+      <span class="hc-type">${esc(r.media_type)}</span>
+    </div>
+    <div class="hc-t">${esc(r.title)}</div>
+    <div class="hc-s">${esc([r.year, when].filter(Boolean).join(" · "))}</div>
+  </div>`;
+}
+
+// ---------------- 主页统计面板 ----------------
+const HP = { data: null, range: "all", sort: "time" };
+
+function hpDaysAgo(ts) {
+  if (!ts) return "";
+  const d = Math.floor((Date.now() / 1000 - ts) / 86400);
+  return d <= 0 ? "今天" : `${d} 天前`;
+}
+
+function renderHomePanel() {
+  const d = HP.data;
+  if (!d || !d.done_count) return;
+  $("#home-panel").classList.remove("hidden");
+  $("#hpanel-sub").textContent =
+    `共 ${d.done_count} 部 · 本月 ${d.month_count} 部 · 约 ${d.total_hours} 小时`;
+
+  $("#hpanel-cards").innerHTML = [
+    ["🎬", d.done_count, "看过的作品", "c-blue"],
+    ["📅", d.month_count, "本月看完", "c-cyan"],
+    ["⏱", d.total_hours, "累计时长（时）", "c-green"],
+    ["💭", d.want_count, "想看待刷", "c-gold"],
+  ].map(([ic, num, lbl, cls]) => `
+    <div class="stat-card">
+      <div class="ic">${ic}</div>
+      <div class="num ${cls}">${num}</div>
+      <div class="lbl">${lbl}</div>
+    </div>`).join("");
+
+  const yStart = new Date(new Date().getFullYear(), 0, 1).getTime() / 1000;
+  const mStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+    .getTime() / 1000;
+  let list = (d.items || []).filter((x) =>
+    HP.range === "year" ? x.ts >= yStart :
+    HP.range === "month" ? x.ts >= mStart : true);
+  const key = HP.sort === "rating"
+    ? (x) => [-(x.rating || 0), -x.ts]
+    : HP.sort === "rewatch"
+      ? (x) => [-x.rewatch, -x.ts]
+      : (x) => -x.ts;
+  list = list.slice().sort((a, b) => {
+    const ka = key(a), kb = key(b);
+    return Array.isArray(ka)
+      ? (ka[0] - kb[0] || ka[1] - kb[1]) : ka - kb;
+  }).slice(0, 12);
+
+  const box = $("#hp-list");
+  if (!list.length) {
+    box.innerHTML = `<div class="hp-empty">这个范围还没有看完的记录</div>`;
+    return;
+  }
+  box.innerHTML = list.map((x, i) => {
+    const poster = x.poster
+      ? `<img src="${esc(x.poster)}" loading="lazy" onerror="this.style.display='none'">`
+      : `<div class="no-poster">🎞</div>`;
+    const right = HP.sort === "rating"
+      ? (x.rating ? `<span class="hp-rate">★ ${x.rating}</span>` : `<span class="hp-none">未评分</span>`)
+      : HP.sort === "rewatch"
+        ? `<span class="hp-rewatch${x.rewatch ? "" : " dim"}">🔁 ×${x.rewatch || 0}</span>`
+        : `<span class="hp-when">${hpDaysAgo(x.ts)}</span>`;
+    return `
+    <div class="hp-item" data-idx="${i}">
+      <div class="hp-poster">${poster}</div>
+      <div class="hp-info">
+        <div class="hp-t">${esc(x.title)}</div>
+        <div class="hp-s">${esc([x.media_type, x.year, hpDaysAgo(x.ts)]
+          .filter(Boolean).join(" · "))}</div>
+      </div>
+      <div class="hp-right">${right}</div>
+    </div>`;
+  }).join("");
+  $$("#hp-list .hp-item").forEach((el) => {
+    el.addEventListener("click", () => {
+      const x = list[+el.dataset.idx];
+      if (x) openDetail({ title: x.title, media_type: x.media_type,
+        year: x.year, poster: x.poster, source: "emby" }, true);
+    });
+  });
+}
+
+$("#hp-range").addEventListener("click", (e) => {
+  const b = e.target.closest(".hp-pill");
+  if (!b) return;
+  HP.range = b.dataset.range;
+  $$("#hp-range .hp-pill").forEach((p) => p.classList.toggle("on", p === b));
+  renderHomePanel();
+});
+$("#hp-sort").addEventListener("click", (e) => {
+  const b = e.target.closest(".hp-pill");
+  if (!b) return;
+  HP.sort = b.dataset.sort;
+  $$("#hp-sort .hp-pill").forEach((p) => p.classList.toggle("on", p === b));
+  renderHomePanel();
+});
+
 async function loadHomeRows(force = false) {
   if (!force && Date.now() - homeRowsAt < 60000) return;
   homeRowsAt = Date.now();
-  let d;
+  let d, p;
   try {
-    d = await api("/api/home/rows");
+    [d, p] = await Promise.all([
+      api("/api/home/rows"),
+      api("/api/home/panel").catch(() => null),
+    ]);
   } catch { return; }
 
   const resume = d.resume || [];
@@ -1482,6 +1596,28 @@ async function loadHomeRows(force = false) {
   } else {
     lBox.classList.add("hidden");
   }
+
+  // 最近看完（本地记录）
+  const recent = p && Array.isArray(p.items) && p.items.length ? p.items.slice(0, 14) : [];
+  const cBox = $("#row-recent");
+  if (recent.length) {
+    const rows = recent.map((x) => ({ ...x, days_ago: x.ts ? Math.floor((Date.now() / 1000 - x.ts) / 86400) : null }));
+    cBox.classList.remove("hidden");
+    $("#row-recent-sub").textContent =
+      rows[0].days_ago === 0 ? "今天也有产出 👏" : "刚刚看完这些";
+    $("#recent-track").innerHTML = rows.map(recentCardHTML).join("");
+    bindRowCards("#recent-track", rows);
+  } else {
+    cBox.classList.add("hidden");
+  }
+
+  // 统计面板
+  if (p && p.done_count) {
+    HP.data = p;
+    renderHomePanel();
+  } else {
+    $("#home-panel").classList.add("hidden");
+  }
 }
 
 function bindRowCards(sel, rows) {
@@ -1499,8 +1635,8 @@ function bindRowCards(sel, rows) {
 }
 
 function hideHomeRows() {
-  $("#row-resume").classList.add("hidden");
-  $("#row-latest").classList.add("hidden");
+  ["#row-resume", "#row-latest", "#row-recent", "#home-panel"]
+    .forEach((s) => $(s).classList.add("hidden"));
 }
 
 // ---------------- 回忆杀 ----------------
