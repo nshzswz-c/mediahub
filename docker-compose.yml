@@ -1,0 +1,8 @@
+services:
+  mediahub:
+    build: .
+    container_name: mediahub
+    restart: unless-stopped
+    network_mode: host        # 群晖下用 host 网络直连本机 MP/Emby，避开防火墙
+    volumes:
+      - ./server/data:/app/server/data   # 配置 + 数据库持久化

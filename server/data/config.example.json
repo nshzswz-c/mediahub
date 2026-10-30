@@ -1,0 +1,33 @@
+{
+  "mp_url": "http://192.168.1.10:3000",
+  "mp_api_version": "auto",
+  "mp_username": "",
+  "mp_password": "",
+  "media_servers": [
+    {
+      "id": "emby1",
+      "type": "emby",
+      "name": "Emby",
+      "url": "http://192.168.1.10:8096",
+      "port": "",
+      "api_key": "",
+      "username": "",
+      "password": "",
+      "auth_mode": "key",
+      "user_id": ""
+    }
+  ],
+  "pan_115_cookie": "",
+  "site_title": "MediaHub",
+  "auto_sync": true,
+  "sync_interval_min": 60,
+  "hook_key": "",
+  "auth_enabled": false,
+  "auth_pass": "",
+  "auth_days": 30,
+  "xiaomi_user": "",
+  "xiaomi_pass": "",
+  "xiaomi_did": "",
+  "tts_enabled": false,
+  "books_dir": "/volume1/Download/video/有声书"
+}

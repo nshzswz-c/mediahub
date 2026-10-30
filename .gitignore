@@ -1,0 +1,19 @@
+# 运行时数据（配置含密码/token，绝不入库）
+server/data/*
+!server/data/config.example.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# 日志与临时文件
+*.log
+*.tgz
+*.bak
+
+# 系统
+.DS_Store
+Thumbs.db
