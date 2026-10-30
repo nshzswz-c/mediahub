@@ -1464,3 +1464,95 @@ main { padding: 26px 24px 60px; max-width: 1400px; margin: 0 auto; }
   .bk-detail-info p { display: none; }
   .bk-modal-card { max-height: 90vh; }
 }
+
+/* ============================================================
+   UX 增强包：骨架屏 / 卡片快捷操作 / 回到顶部 / 入场动画
+   ============================================================ */
+
+/* ---- 视图切换淡入 ---- */
+@keyframes viewIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+main > section { animation: viewIn .28s var(--ease); }
+@media (prefers-reduced-motion: reduce) {
+  main > section, .card { animation: none !important; transition: none !important; }
+}
+
+/* ---- 卡片入场（renderGrid 时逐个淡入） ---- */
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(12px) scale(.98); }
+  to   { opacity: 1; transform: none; }
+}
+.card.enter { animation: cardIn .34s var(--ease) both; }
+
+/* ---- 骨架屏 ---- */
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+.sk-card { border-radius: var(--r-md); overflow: hidden; }
+.sk-card .sk-box {
+  aspect-ratio: 2/3;
+  background: linear-gradient(100deg,
+    var(--panel2) 40%, #232a3a 50%, var(--panel2) 60%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s linear infinite;
+}
+.sk-card .sk-line {
+  height: 12px; margin: 10px 12px 6px; border-radius: 6px;
+  background: linear-gradient(100deg,
+    var(--panel2) 40%, #232a3a 50%, var(--panel2) 60%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s linear infinite;
+}
+.sk-card .sk-line.short { width: 46%; margin-bottom: 14px; }
+
+/* ---- 卡片悬停快捷按钮（一键想看） ---- */
+.card .qa {
+  position: absolute; inset: auto 9px 9px 9px; z-index: 3;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  padding: 7px 0; border: none; border-radius: 9px;
+  background: rgba(10, 13, 20, .78); color: #fff;
+  font-size: 12.5px; font-weight: 650; cursor: pointer;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(109, 141, 255, .35);
+  opacity: 0; transform: translateY(6px);
+  transition: opacity .18s var(--ease), transform .18s var(--ease),
+              background .18s var(--ease);
+}
+.card:hover .qa, .card:focus-within .qa { opacity: 1; transform: none; }
+.card .qa:hover { background: rgba(109, 141, 255, .88); }
+.card .qa:active { transform: scale(.96); }
+.card .qa.is-want { border-color: rgba(109, 141, 255, .5); color: #cdd8ff; }
+.card .qa.is-done { border-color: rgba(52, 211, 153, .5); color: #a7f3d0; cursor: default; }
+.card .qa.loading { opacity: 1; pointer-events: none; }
+@media (hover: none) {
+  /* 触屏：常显小按钮 */
+  .card .qa { opacity: 1; transform: none; padding: 6px 0; }
+}
+
+/* ---- 回到顶部 ---- */
+#back-top {
+  position: fixed; right: 22px; bottom: 26px; z-index: 30;
+  width: 42px; height: 42px; border-radius: 50%;
+  border: 1px solid var(--border); background: rgba(26, 31, 42, .92);
+  color: var(--muted); font-size: 17px; cursor: pointer;
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-1);
+  opacity: 0; transform: translateY(14px); pointer-events: none;
+  transition: opacity .22s var(--ease), transform .22s var(--ease),
+              color .15s, border-color .15s;
+}
+#back-top.show { opacity: 1; transform: none; pointer-events: auto; }
+#back-top:hover { color: #fff; border-color: rgba(109, 141, 255, .55); }
+
+/* ---- 加载更多按钮状态 ---- */
+.btn.loading { pointer-events: none; opacity: .6; }
+.btn.loading::after {
+  content: ""; display: inline-block; width: 12px; height: 12px;
+  border: 2px solid currentColor; border-top-color: transparent;
+  border-radius: 50%; margin-left: 7px; vertical-align: -1px;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }

@@ -101,7 +101,7 @@ $("#tabs").addEventListener("click", (e) => {
 });
 
 // ---------------- 浏览/搜索 ----------------
-function cardHTML(m, record) {
+function cardHTML(m, record, idx = -1) {
   const rate = record?.status === "done" && record.rating
     ? `<span class="rate-badge">★ ${record.rating}</span>` : "";
   const badge = record
@@ -112,15 +112,32 @@ function cardHTML(m, record) {
   const poster = m.poster
     ? `<img src="${esc(m.poster)}" loading="lazy" onerror="this.style.display='none'">`
     : `<div class="no-poster">🎞</div>`;
+  // 悬停快捷按钮：没记录 → 一键想看；想看 → 已加入；看完 → 已看完
+  const qa = !record
+    ? `<button class="qa" data-qa="want" title="一键加入想看并订阅下载">＋ 想看</button>`
+    : record.status === "done"
+      ? `<button class="qa is-done" data-qa="none" title="已看完，点海报看详情">✓ 已看完</button>`
+      : `<button class="qa is-want" data-qa="want" title="已在想看清单">✓ 想看</button>`;
+  const anim = idx >= 0 ? ` enter" style="animation-delay:${Math.min(idx * 28, 340)}ms` : "";
   return `
-  <div class="card" data-idx="${m._idx}">
+  <div class="card${anim}" data-idx="${m._idx}">
     <div class="poster-wrap">${poster}${rate}${badge}
-      <span class="badge type">${esc(m.media_type)}</span></div>
+      <span class="badge type">${esc(m.media_type)}</span>${qa}</div>
     <div class="info">
       <div class="title">${esc(m.title)}</div>
       <div class="year">${esc(m.year || "")}</div>
     </div>
   </div>`;
+}
+
+// 骨架屏：加载时先占位，避免白屏突兀
+function showSkeleton(grid, n = 18) {
+  grid.innerHTML = Array.from({ length: n }, () => `
+    <div class="sk-card">
+      <div class="sk-box"></div>
+      <div class="sk-line"></div>
+      <div class="sk-line short"></div>
+    </div>`).join("");
 }
 
 function findRecord(m) {
@@ -134,14 +151,19 @@ function renderGrid() {
   const grid = $("#media-grid");
   if (state.tab !== "browse") return;
   grid.innerHTML = state.items
-    .map((m, i) => { m._idx = i; return cardHTML(m, findRecord(m)); })
+    .map((m, i) => { m._idx = i; return cardHTML(m, findRecord(m), i); })
     .join("");
   $("#browse-empty").classList.toggle("hidden", state.items.length > 0);
   $("#more-btn").classList.toggle("hidden", state.items.length === 0 || state.searchMode);
 }
 
 async function loadBrowse(append = false) {
-  if (!append) { state.page = 1; state.items = []; renderGrid(); }
+  if (!append) {
+    state.page = 1; state.items = [];
+    showSkeleton($("#media-grid"));
+    $("#browse-empty").classList.add("hidden");
+    $("#more-btn").classList.add("hidden");
+  }
   try {
     let data;
     if (state.mediaType === "图书") {
@@ -179,12 +201,45 @@ function doSearch() {
   hideHomeRows();
   loadBrowse();
 }
-$("#more-btn").addEventListener("click", () => { state.page++; loadBrowse(true); });
+$("#more-btn").addEventListener("click", async (e) => {
+  const btn = e.currentTarget;
+  state.page++;
+  btn.classList.add("loading"); btn.textContent = "加载中";
+  try { await loadBrowse(true); }
+  finally { btn.classList.remove("loading"); btn.textContent = "加载更多"; }
+});
 
-$("#media-grid").addEventListener("click", (e) => {
+$("#media-grid").addEventListener("click", async (e) => {
+  const qa = e.target.closest(".qa");
+  if (qa) {
+    e.stopPropagation();
+    if (qa.dataset.qa !== "want") return;
+    const card = qa.closest(".card");
+    const m = state.items[+card.dataset.idx];
+    if (!m || qa.classList.contains("loading")) return;
+    qa.classList.add("loading"); qa.textContent = "提交中…";
+    try {
+      await api("/api/want", {
+        method: "POST",
+        body: JSON.stringify({
+          source: m.source || "mp", media_type: m.media_type, title: m.title,
+          year: m.year || "", overview: m.overview || "", poster: m.poster || "",
+          tmdb_id: m.tmdb_id || null, douban_id: m.douban_id || null,
+          media_source: m.media_source || "", media_id: m.media_id || "",
+          subscribe_mp: true,
+        }),
+      });
+      toast("已加入想看，并已通知 MP 订阅下载 ✅", "ok");
+      await refreshRecords();
+      renderGrid(); // 重渲染后该卡会带上 ✓ 徽标
+    } catch (err) {
+      toast(err.message, "err");
+      qa.classList.remove("loading"); qa.textContent = "＋ 想看";
+    }
+    return;
+  }
   const card = e.target.closest(".card");
-  if (!card) return;
-  openDetail(state.items[+card.dataset.idx]);
+  if (card) openDetail(state.items[+card.dataset.idx]);
 });
 
 // ---------------- 详情弹窗 ----------------
@@ -2101,3 +2156,27 @@ $("#bk-q").addEventListener("keydown", (e) => { if (e.key === "Enter") loadBooks
   const t = new URLSearchParams(location.search).get("tab");
   if (["browse", "books", "mine", "stats", "settings"].includes(t)) switchTab(t);
 })();
+
+// ---------------- 全局易用性增强 ----------------
+// 回到顶部
+const backTop = $("#back-top");
+window.addEventListener("scroll", () => {
+  backTop.classList.toggle("show", window.scrollY > 600);
+}, { passive: true });
+backTop.addEventListener("click", () =>
+  window.scrollTo({ top: 0, behavior: "smooth" }));
+
+// 快捷键：/ 聚焦搜索；Esc 关闭所有弹窗
+document.addEventListener("keydown", (e) => {
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || "");
+  if (e.key === "/" && !typing) {
+    e.preventDefault();
+    switchTab("browse");
+    $("#search-input").focus();
+    $("#search-input").select();
+    return;
+  }
+  if (e.key === "Escape") {
+    ["#modal", "#book-modal", "#share-modal"].forEach((s) => $(s)?.classList.add("hidden"));
+  }
+});
