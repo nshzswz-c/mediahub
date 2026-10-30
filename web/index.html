@@ -40,7 +40,8 @@
     <button id="search-btn">搜索</button>
   </div>
   <nav class="tabs" id="tabs">
-    <button class="tab active" data-tab="browse" data-type="电影">🎬 电影</button>
+    <button class="tab active" data-tab="home">🏠 首页</button>
+    <button class="tab" data-tab="browse" data-type="电影">🎬 电影</button>
     <button class="tab" data-tab="browse" data-type="电视剧">📺 电视剧</button>
     <button class="tab" data-tab="browse" data-type="短剧">🎭 短剧</button>
     <button class="tab" data-tab="browse" data-type="纪录片">🌍 纪录片</button>
@@ -64,8 +65,8 @@
 </header>
 
 <main id="main">
-  <!-- 浏览/搜索 -->
-  <section id="view-browse">
+  <!-- 首页：继续观看 / 最近入库 / 最近看完 / 统计面板 -->
+  <section id="view-home">
     <div id="memories-banner" class="memories-banner hidden"></div>
 
     <section class="hrow hidden" id="row-resume">
@@ -113,6 +114,11 @@
       <div class="hp-list" id="hp-list"></div>
     </section>
 
+    <div class="empty" id="home-empty">内容加载中…</div>
+  </section>
+
+  <!-- 浏览/搜索 -->
+  <section id="view-browse" class="hidden">
     <h2 id="browse-title" class="section-title">热门电影</h2>
     <div id="media-grid" class="grid"></div>
     <div id="browse-empty" class="empty hidden">没有数据。请先在 ⚙️ 设置里填好 MoviePilot 地址和账号，或换个关键词搜索。</div>

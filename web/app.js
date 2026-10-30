@@ -3,7 +3,7 @@ const $ = (s) => document.querySelector(s);
 const $$ = (s) => document.querySelectorAll(s);
 
 const state = {
-  tab: "browse",
+  tab: "home",
   mediaType: "电影",
   searchMode: false,
   statsView: "stats",
@@ -61,19 +61,18 @@ function esc(s) {
 function switchTab(tab, type) {
   state.tab = tab;
   if (type) state.mediaType = type;
+  window.scrollTo({ top: 0 });
   $$(".tab").forEach((b) =>
     b.classList.toggle("active",
       b.dataset.tab === tab && (tab !== "browse" || b.dataset.type === type)));
-  ["browse", "books", "mine", "settings", "stats"].forEach((v) =>
+  ["home", "browse", "books", "mine", "settings", "stats"].forEach((v) =>
     $("#view-" + v).classList.toggle("hidden", v !== tab));
+  if (tab === "home") loadHomeRows(true);
   if (tab === "browse") loadBrowse();
   if (tab === "books") loadBooks(true);
   if (tab === "mine") loadRecords();
   if (tab === "stats") { loadStats(); showStatsView(state.statsView || "stats"); }
-  if (tab === "settings") {
-    window.scrollTo({ top: 0 });
-    loadSettings();
-  }
+  if (tab === "settings") loadSettings();
 }
 
 // 统计页子视图切换：统计 / 年度报告
@@ -90,12 +89,11 @@ $("#sw-report").addEventListener("click", () => showStatsView("report"));
 
 $("#tabs").addEventListener("click", (e) => {
   const btn = e.target.closest(".tab");
-  if (!btn) return;
+  if (!btn || !btn.dataset.tab) return;   // 🎨 主题按钮等无页签目标，忽略
   if (btn.dataset.tab === "browse") {
     state.searchMode = false;
     switchTab("browse", btn.dataset.type);
     $("#browse-title").textContent = "热门" + btn.dataset.type;
-    loadHomeRows(true);
   } else {
     switchTab(btn.dataset.tab);
   }
@@ -201,7 +199,7 @@ function doSearch() {
   if (!q) return;
   state.searchMode = true;
   state.query = q;
-  hideHomeRows();
+  switchTab("browse", state.mediaType);
   loadBrowse();
 }
 $("#more-btn").addEventListener("click", async (e) => {
@@ -1572,7 +1570,11 @@ async function loadHomeRows(force = false) {
       api("/api/home/rows"),
       api("/api/home/panel").catch(() => null),
     ]);
-  } catch { return; }
+  } catch {
+    $("#home-empty").textContent = "加载失败，请稍后刷新重试";
+    $("#home-empty").classList.remove("hidden");
+    return;
+  }
 
   const resume = d.resume || [];
   const latest = d.latest || [];
@@ -1618,6 +1620,12 @@ async function loadHomeRows(force = false) {
   } else {
     $("#home-panel").classList.add("hidden");
   }
+
+  // 首页整体空态提示
+  $("#home-empty").classList.toggle("hidden",
+    !!(resume.length || latest.length || recent.length || (p && p.done_count)));
+  if (!resume.length && !latest.length && !recent.length && !(p && p.done_count))
+    $("#home-empty").textContent = "暂无内容：看完或收藏一些片子、配置好媒体服务器后，这里会展示你的观影动态。";
 }
 
 function bindRowCards(sel, rows) {
@@ -1632,11 +1640,6 @@ function bindRowCards(sel, rows) {
       }, true);
     });
   });
-}
-
-function hideHomeRows() {
-  ["#row-resume", "#row-latest", "#row-recent", "#home-panel"]
-    .forEach((s) => $(s).classList.add("hidden"));
 }
 
 // ---------------- 回忆杀 ----------------
@@ -2293,7 +2296,7 @@ $("#bk-q").addEventListener("keydown", (e) => { if (e.key === "Enter") loadBooks
   startApp();
   // 支持 PWA 快捷方式：/?tab=stats
   const t = new URLSearchParams(location.search).get("tab");
-  if (["browse", "books", "mine", "stats", "settings"].includes(t)) switchTab(t);
+  if (["home", "browse", "books", "mine", "stats", "settings"].includes(t)) switchTab(t);
 })();
 
 // ---------------- 全局易用性增强 ----------------
