@@ -1556,3 +1556,38 @@ main > section { animation: viewIn .28s var(--ease); }
   animation: spin .7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---- 细节打磨：评分角标 / 弹窗动画 / 空状态 ---- */
+
+/* 来源评分角标（TMDB/豆瓣），放海报右下，与左下类型角标对称 */
+.card .badge.vote {
+  top: auto; right: 9px; bottom: 9px; left: auto;
+  background: rgba(8, 10, 14, .62); color: var(--star); font-weight: 700;
+  border: 1px solid rgba(251, 191, 36, .28);
+  backdrop-filter: blur(4px);
+}
+
+/* 详情弹窗打开动画（display:none→block 时自动重放） */
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(18px) scale(.97); }
+  to   { opacity: 1; transform: none; }
+}
+.modal-card { animation: modalIn .26s var(--ease); }
+@keyframes maskIn { from { opacity: 0; } to { opacity: 1; } }
+.modal { animation: maskIn .2s ease; }
+@media (prefers-reduced-motion: reduce) {
+  .modal, .modal-card { animation: none !important; }
+}
+
+/* Toast 呼吸感 */
+.toast { animation: viewIn .22s var(--ease); }
+
+/* 空状态分层文案 */
+.empty { line-height: 1.7; }
+.empty b { color: var(--text); }
+
+/* 骨架屏在移动端少一点 */
+@media (max-width: 720px) {
+  .grid { gap: 12px; grid-template-columns: repeat(auto-fill, minmax(126px, 1fr)); }
+  #back-top { right: 14px; bottom: 18px; }
+}

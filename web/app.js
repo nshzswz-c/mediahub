@@ -31,7 +31,8 @@ function fmtTime(ts) {
 
 function toast(msg, type = "") {
   const t = $("#toast");
-  t.textContent = msg;
+  const icon = type === "ok" ? "✅ " : type === "err" ? "❌ " : "";
+  t.textContent = icon + msg;
   t.className = "toast " + type;
   clearTimeout(t._timer);
   t._timer = setTimeout(() => t.classList.add("hidden"), 3000);
@@ -118,10 +119,12 @@ function cardHTML(m, record, idx = -1) {
     : record.status === "done"
       ? `<button class="qa is-done" data-qa="none" title="已看完，点海报看详情">✓ 已看完</button>`
       : `<button class="qa is-want" data-qa="want" title="已在想看清单">✓ 想看</button>`;
+  const vote = m.vote
+    ? `<span class="badge vote" title="来源评分">★ ${Number(m.vote).toFixed(1)}</span>` : "";
   const anim = idx >= 0 ? ` enter" style="animation-delay:${Math.min(idx * 28, 340)}ms` : "";
   return `
-  <div class="card${anim}" data-idx="${m._idx}">
-    <div class="poster-wrap">${poster}${rate}${badge}
+  <div class="card${anim}" data-idx="${m._idx}" title="${esc(m.title)}${m.year ? ` (${esc(m.year)})` : ""}">
+    <div class="poster-wrap">${poster}${rate}${vote}${badge}
       <span class="badge type">${esc(m.media_type)}</span>${qa}</div>
     <div class="info">
       <div class="title">${esc(m.title)}</div>

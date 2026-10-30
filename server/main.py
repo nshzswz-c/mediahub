@@ -437,6 +437,7 @@ class MoviePilotClient:
             "douban_id": m.get("douban_id") or m.get("doubanid"),
             "media_source": m.get("media_source") or "",
             "media_id": str(m.get("media_id") or ""),
+            "vote": m.get("vote_average") or m.get("rating") or m.get("rating_value") or None,
         }
 
     async def _try_paths(self, paths: list, params: dict = None) -> Any:
