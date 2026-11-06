@@ -65,6 +65,11 @@ function switchTab(tab, type) {
   $$(".tab").forEach((b) =>
     b.classList.toggle("active",
       b.dataset.tab === tab && (tab !== "browse" || b.dataset.type === type)));
+  const secondaryTab = tab === "stats" || tab === "settings"
+    || (tab === "browse" && ["短剧", "纪录片", "图书", "音乐"].includes(type));
+  const moreToggle = $("#nav-more-toggle");
+  moreToggle?.classList.toggle("active", secondaryTab);
+  closeMoreMenu();
   ["home", "browse", "books", "mine", "settings", "stats"].forEach((v) =>
     $("#view-" + v).classList.toggle("hidden", v !== tab));
   if (tab === "home") loadHomeRows(true);
@@ -74,6 +79,38 @@ function switchTab(tab, type) {
   if (tab === "stats") { loadStats(); showStatsView(state.statsView || "stats"); }
   if (tab === "settings") loadSettings();
 }
+
+const moreToggle = $("#nav-more-toggle");
+const morePanel = $("#nav-more-panel");
+function closeMoreMenu() {
+  morePanel?.classList.add("hidden");
+  moreToggle?.setAttribute("aria-expanded", "false");
+}
+moreToggle?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  const open = morePanel.classList.toggle("hidden") === false;
+  moreToggle.setAttribute("aria-expanded", String(open));
+});
+morePanel?.addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-tab]");
+  if (!btn) return;
+  if (btn.dataset.tab === "browse") {
+    state.searchMode = false;
+    switchTab("browse", btn.dataset.type);
+    $("#browse-title").textContent = "热门" + btn.dataset.type;
+  } else {
+    switchTab(btn.dataset.tab);
+  }
+});
+document.addEventListener("click", (e) => {
+  if (!e.target.closest("#nav-more-panel, #nav-more-toggle")) closeMoreMenu();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !morePanel?.classList.contains("hidden")) {
+    closeMoreMenu();
+    moreToggle?.focus();
+  }
+});
 
 // 统计页子视图切换：统计 / 年度报告
 function showStatsView(v) {
@@ -2338,12 +2375,5 @@ function applyTheme(name) {
   try { saved = localStorage.getItem("mh-theme") || "night"; } catch { /* ignore */ }
   applyTheme(saved);
 })();
-$("#theme-btn").addEventListener("click", (e) => {
-  e.stopPropagation();
-  $("#theme-pop").classList.toggle("hidden");
-});
 $$("#theme-pop .swatch").forEach((b) =>
   b.addEventListener("click", () => { applyTheme(b.dataset.theme); }));
-document.addEventListener("click", (e) => {
-  if (!e.target.closest(".theme-wrap")) $("#theme-pop").classList.add("hidden");
-});

@@ -43,26 +43,36 @@
     <button class="tab active" data-tab="home">🏠 首页</button>
     <button class="tab" data-tab="browse" data-type="电影">🎬 电影</button>
     <button class="tab" data-tab="browse" data-type="电视剧">📺 电视剧</button>
-    <button class="tab" data-tab="browse" data-type="短剧">🎭 短剧</button>
-    <button class="tab" data-tab="browse" data-type="纪录片">🌍 纪录片</button>
-    <button class="tab" data-tab="browse" data-type="图书">📚 图书</button>
-    <button class="tab" data-tab="browse" data-type="音乐">🎵 音乐</button>
     <button class="tab" data-tab="books">🎧 有声书</button>
     <button class="tab" data-tab="mine">我的</button>
-    <button class="tab" data-tab="stats">📊 统计</button>
-    <button class="tab" data-tab="settings">⚙️</button>
-    <div class="theme-wrap">
-      <button class="tab" id="theme-btn" title="主题配色">🎨</button>
-      <div id="theme-pop" class="theme-pop hidden">
-        <button class="swatch" data-theme="night"  style="--sw:#6d8dff" title="夜幕蓝（默认）"></button>
-        <button class="swatch" data-theme="light"  style="--sw:#f4f6fb" title="晨雾白（亮色）"></button>
-        <button class="swatch" data-theme="green"  style="--sw:#34d399" title="薄荷绿"></button>
-        <button class="swatch" data-theme="pink"   style="--sw:#f472b6" title="樱花粉"></button>
-        <button class="swatch" data-theme="orange" style="--sw:#fb923c" title="落日橙"></button>
-        <button class="swatch" data-theme="purple" style="--sw:#a78bfa" title="星云紫"></button>
+    <button class="tab nav-more-toggle" id="nav-more-toggle" type="button"
+            aria-expanded="false" aria-controls="nav-more-panel">••• 更多</button>
+  </nav>
+  <div class="nav-more-panel hidden" id="nav-more-panel" aria-label="更多导航">
+    <div class="nav-more-group">
+      <span class="nav-more-label">发现</span>
+      <button class="tab" data-tab="browse" data-type="短剧">🎭 短剧</button>
+      <button class="tab" data-tab="browse" data-type="纪录片">🌍 纪录片</button>
+      <button class="tab" data-tab="browse" data-type="图书">📚 图书</button>
+      <button class="tab" data-tab="browse" data-type="音乐">🎵 音乐</button>
+    </div>
+    <div class="nav-more-group">
+      <span class="nav-more-label">管理</span>
+      <button class="tab" data-tab="stats">📊 统计</button>
+      <button class="tab" data-tab="settings" aria-label="设置">⚙️ 设置</button>
+    </div>
+    <div class="nav-more-group nav-theme-group">
+      <span class="nav-more-label">外观</span>
+      <div class="theme-swatches" id="theme-pop" aria-label="主题配色">
+        <button class="swatch" data-theme="night"  style="--sw:#6d8dff" aria-label="夜幕蓝（默认）" title="夜幕蓝（默认）"></button>
+        <button class="swatch" data-theme="light"  style="--sw:#f4f6fb" aria-label="晨雾白（亮色）" title="晨雾白（亮色）"></button>
+        <button class="swatch" data-theme="green"  style="--sw:#34d399" aria-label="薄荷绿" title="薄荷绿"></button>
+        <button class="swatch" data-theme="pink"   style="--sw:#f472b6" aria-label="樱花粉" title="樱花粉"></button>
+        <button class="swatch" data-theme="orange" style="--sw:#fb923c" aria-label="落日橙" title="落日橙"></button>
+        <button class="swatch" data-theme="purple" style="--sw:#a78bfa" aria-label="星云紫" title="星云紫"></button>
       </div>
     </div>
-  </nav>
+  </div>
 </header>
 
 <main id="main">
