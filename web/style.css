@@ -1797,3 +1797,6 @@ html[data-theme="light"] #back-top:hover { color: var(--accent); }
   border-color: #fff;
   box-shadow: 0 0 0 2px var(--sw), 0 0 12px color-mix(in srgb, var(--sw) 60%, transparent);
 }
+.discovery-card { background: transparent; color: inherit; text-align: left; font: inherit; border: 0; padding: 0; }
+#discovery .hrow-head { flex-wrap: wrap; gap: 10px; }
+#discovery select { color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; }

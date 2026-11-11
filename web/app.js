@@ -490,6 +490,7 @@ async function refreshRecords() {
     const want = await api("/api/records?status=want");
     const done = await api("/api/records?status=done");
     state.records = want.concat(done);
+    renderDiscoveryWants();
   } catch { /* ignore */ }
 }
 
@@ -1598,7 +1599,101 @@ $("#hp-sort").addEventListener("click", (e) => {
   renderHomePanel();
 });
 
+const discoveryGroups = [
+  ["近期电影", [["showing", "正在热映"], ["movies", "热门电影"]]],
+  ["热播电视剧", [["tv", "热门剧集"], ["chinese", "国产口碑周榜"], ["global", "全球口碑周榜"]]],
+  ["经典高分榜", [["classic", "电影 Top250"], ["rated", "高分剧集"]]],
+];
+const discoveryPool = new Map();
+
+function discoveryCards(track, items, firstRank = 0) {
+  track.innerHTML = items.map((m, i) => {
+    const meta = [m.year, m.vote ? "豆瓣 ★ " + m.vote : "", m.media_type].filter(Boolean);
+    return `<button type="button" class="hc discovery-card" title="${esc(m.overview || m.title)}">
+      <div class="hc-poster">${m.poster ? `<img loading="lazy" referrerpolicy="no-referrer" src="${esc(m.poster)}" alt="">` : '<div class="no-poster">🎞</div>'}
+      ${firstRank ? `<span class="hc-badge">#${firstRank + i}</span>` : ""}</div>
+      <div class="hc-t">${esc(m.title)}</div><div class="hc-s">${esc(meta.join(" · "))}</div></button>`;
+  }).join("");
+  Array.from(track.children).forEach((button, i) => button.onclick = () => openDetail(items[i]));
+}
+
+function renderDiscoveryWants() {
+  const track = $("#discover-wants");
+  if (!track) return;
+  const wants = state.records.filter(r => r.status === "want");
+  discoveryCards(track, wants);
+  if (!wants.length) track.textContent = "还没有想看的片，点开海报就能加入清单。";
+}
+
+function pickTonight() {
+  const type = $("#tonight-type").value;
+  const unique = new Map();
+  for (const m of Array.from(discoveryPool.values()).flat()) {
+    if ((!type || m.media_type === type) && findRecord(m)?.status !== "done")
+      unique.set(JSON.stringify([m.media_type, m.title, m.year]), m);
+  }
+  const pool = Array.from(unique.values());
+  const picks = [];
+  while (pool.length && picks.length < 5)
+    picks.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  const track = $("#tonight-picks");
+  discoveryCards(track, picks);
+  if (!picks.length) track.textContent = "当前榜单暂无可推荐的片目。";
+}
+
+function loadDiscovery() {
+  const root = $("#discovery");
+  if (root.children.length) return;
+  root.innerHTML = discoveryGroups.map(([title, feeds]) => `
+    <section class="hrow discovery-group"><div class="hrow-head"><h2 class="hrow-title">${title}</h2>
+    <select aria-label="${title}榜单">${feeds.map(([key, label]) => `<option value="${key}">${label}</option>`).join("")}</select>
+    <small class="hrow-sub">豆瓣 · MoviePilot</small></div>
+    <div class="hrow-scroll"></div><button class="btn next hidden">下一页</button></section>`).join("") + `
+    <section class="hrow"><div class="hrow-head"><h2 class="hrow-title">今晚看什么</h2>
+    <select id="tonight-type" aria-label="推荐类型"><option value="">电影和剧集</option><option>电影</option><option>电视剧</option></select>
+    <button class="btn" id="tonight-shuffle">换一批</button></div><div class="hrow-scroll" id="tonight-picks">正在挑片…</div></section>
+    <section class="hrow"><div class="hrow-head"><h2 class="hrow-title">我的想看</h2></div><div class="hrow-scroll" id="discover-wants">正在读取…</div></section>`;
+  refreshRecords();
+  $("#tonight-type").onchange = $("#tonight-shuffle").onclick = pickTonight;
+  const pending = Array.from($$(".discovery-group"), section => {
+    const select = section.querySelector("select");
+    const track = section.querySelector(".hrow-scroll");
+    const next = section.querySelector(".next");
+    let revision = 0;
+    async function loadPage(page) {
+      const current = ++revision;
+      const feed = select.value;
+      next.classList.add("hidden");
+      track.textContent = "正在读取榜单…";
+      try {
+        const items = await api(`/api/home/discovery/${feed}?page=${page}`);
+        if (current !== revision) return;
+        discoveryPool.set(feed, items);
+        discoveryCards(track, items, feed === "classic" ? (page - 1) * 25 + 1 : 0);
+        track.scrollLeft = 0;
+        if (!items.length) track.textContent = "这个榜单暂时没有片目。";
+        if (feed === "classic" && (items.length === 25 || page > 1)) {
+          const following = page < 10 && items.length === 25 ? page + 1 : 1;
+          next.textContent = following === 1 ? "回到榜首" : "下一页";
+          next.onclick = () => loadPage(following);
+          next.classList.remove("hidden");
+        }
+      } catch {
+        if (current !== revision) return;
+        track.textContent = "榜单读取失败，请检查设置中的 MoviePilot 连接。";
+        next.textContent = "重试";
+        next.onclick = () => loadPage(page).then(pickTonight);
+        next.classList.remove("hidden");
+      }
+    }
+    select.onchange = () => loadPage(1).then(pickTonight);
+    return loadPage(1);
+  });
+  Promise.all(pending).then(pickTonight);
+}
+
 async function loadHomeRows(force = false) {
+  loadDiscovery();
   if (!force && Date.now() - homeRowsAt < 60000) return;
   homeRowsAt = Date.now();
   let d, p;

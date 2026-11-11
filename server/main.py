@@ -1463,6 +1463,30 @@ async def media_popular(media_type: str = Query("电影"), page: int = 1):
         return []
 
 
+DISCOVERY_FEEDS = {
+    "showing": ("douban_showing", "电影"),
+    "movies": ("douban_movie_hot", "电影"),
+    "tv": ("douban_tv_hot", "电视剧"),
+    "chinese": ("douban_tv_weekly_chinese", "电视剧"),
+    "global": ("douban_tv_weekly_global", "电视剧"),
+    "classic": ("douban_movie_top250", "电影"),
+    "rated": ("douban_tvs", "电视剧"),
+}
+
+
+@app.get("/api/home/discovery/{feed}")
+async def home_discovery(feed: str, page: int = Query(1, ge=1, le=10)):
+    if feed not in DISCOVERY_FEEDS:
+        raise HTTPException(404, "未知榜单")
+    path, media_type = DISCOVERY_FEEDS[feed]
+    params = {"page": page, "count": 25}
+    if feed == "rated":
+        params["sort"] = "S"
+    data = await mp.request("GET", f"/recommend/{path}", params=params)
+    items = data if isinstance(data, list) else (data or {}).get("list", [])
+    return [mp._map_media(item, media_type) for item in items]
+
+
 @app.post("/api/want")
 async def want(body: WantModel):
     """想看 → 本地记录 + 通知 MoviePilot 订阅下载"""
