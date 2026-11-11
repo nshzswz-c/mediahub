@@ -1644,6 +1644,22 @@ function pickTonight() {
   if (!picks.length) track.textContent = "当前榜单暂无可推荐的片目。";
 }
 
+function drawMovie() {
+  const unique = new Map();
+  for (const m of Array.from(discoveryPool.values()).flat()) {
+    const score = Number(m.vote);
+    if (m.media_type === "电影" && Number.isFinite(score) && score >= 7)
+      unique.set(JSON.stringify([m.media_type, m.title, m.year]), m);
+  }
+  const pool = Array.from(unique.values());
+  const track = $("#movie-draw-result");
+  if (!pool.length) {
+    track.textContent = "当前已加载的电影榜单里，没有评分达到 7.0 的影片。";
+    return;
+  }
+  discoveryCards(track, [pool[Math.floor(Math.random() * pool.length)]]);
+}
+
 function loadDiscovery() {
   const root = $("#discovery");
   if (root.children.length) return;
@@ -1655,9 +1671,13 @@ function loadDiscovery() {
     <section class="hrow"><div class="hrow-head"><h2 class="hrow-title">今晚看什么</h2>
     <select id="tonight-type" aria-label="推荐类型"><option value="">电影和剧集</option><option>电影</option><option>电视剧</option></select>
     <button class="btn" id="tonight-shuffle">换一批</button></div><div class="hrow-scroll" id="tonight-picks">正在挑片…</div></section>
+    <section class="hrow"><div class="hrow-head"><h2 class="hrow-title">电影抽奖</h2>
+    <button class="btn primary" id="movie-draw">抽一部（豆瓣 7.0+）</button></div>
+    <div class="hrow-scroll" id="movie-draw-result">从已加载的电影榜单中随机抽一部高分电影。</div></section>
     <section class="hrow"><div class="hrow-head"><h2 class="hrow-title">我的想看</h2></div><div class="hrow-scroll" id="discover-wants">正在读取…</div></section>`;
   refreshRecords();
   $("#tonight-type").onchange = $("#tonight-shuffle").onclick = pickTonight;
+  $("#movie-draw").onclick = drawMovie;
   const pending = Array.from($$(".discovery-group"), section => {
     const select = section.querySelector("select");
     const track = section.querySelector(".hrow-scroll");
