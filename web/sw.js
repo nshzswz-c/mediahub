@@ -1,5 +1,5 @@
 /* MediaHub Service Worker —— 只做「离线壳」缓存，接口永远走网络 */
-const CACHE = "mh-shell-v8";
+const CACHE = "mh-shell-v9";
 const SHELL = [
   "/",
   "/static/style.css",
