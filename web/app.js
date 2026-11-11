@@ -1609,8 +1609,11 @@ const discoveryPool = new Map();
 function discoveryCards(track, items, firstRank = 0) {
   track.innerHTML = items.map((m, i) => {
     const meta = [m.year, m.vote ? "豆瓣 ★ " + m.vote : "", m.media_type].filter(Boolean);
+    const poster = m.poster?.startsWith("http")
+      ? "/api/img/proxy?url=" + encodeURIComponent(m.poster)
+      : m.poster;
     return `<button type="button" class="hc discovery-card" title="${esc(m.overview || m.title)}">
-      <div class="hc-poster">${m.poster ? `<img loading="lazy" src="${esc(m.poster)}" alt="">` : '<div class="no-poster">🎞</div>'}
+      <div class="hc-poster">${poster ? `<img loading="lazy" src="${esc(poster)}" alt="" onerror="this.style.display='none';this.nextElementSibling?.classList.remove('hidden')">` : '<div class="no-poster">🎞</div>'}
       ${firstRank ? `<span class="hc-badge">#${firstRank + i}</span>` : ""}</div>
       <div class="hc-t">${esc(m.title)}</div><div class="hc-s">${esc(meta.join(" · "))}</div></button>`;
   }).join("");
